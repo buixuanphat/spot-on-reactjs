@@ -1,24 +1,51 @@
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { Container } from 'react-bootstrap';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+import Admin from './components/Admin';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import User from './components/User';
+import Login from './components/Login';
+import { MyDispatchContext, MyUserContext } from './Contexts';
+import { useReducer } from 'react';
+import MyUserReducer from './reducers/MyUserReducer';
+import cookie from 'react-cookies'
+import UserDetail from './components/UserDetail';
+import Organizer from './components/Organizer';
+import OrganizerDetail from './components/OrganizerDetail';
+import RegisterOrganizer from './components/RegisterOrganizer';
+import RegisterEvent from './components/RegisterEvent';
+import Event from './components/Event';
+
 
 function App() {
+
+  const [user, dispatch] = useReducer(MyUserReducer, cookie.load('user'));
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <MyUserContext.Provider value={user}>
+      <MyDispatchContext.Provider value={dispatch}>
+        <BrowserRouter>
+          <Header />
+          <Container>
+            <Routes>
+              <Route path='/admin' element={<Admin />} />
+              <Route path='/users' element={<User />} />
+              <Route path='/organizers/register' element={<RegisterOrganizer />} />
+              <Route path='/log-in' element={<Login />} />
+              <Route path='/users/:id' element={<UserDetail/>}/>
+              <Route path='/organizers' element={<Organizer/>}/>
+              <Route path='/organizers/:id' element={<OrganizerDetail/>}/>
+              <Route path='/event/register' element={<RegisterEvent/>}/>
+              <Route path='/events' element={<Event/>}/>
+            </Routes>
+          </Container>
+          <Footer />
+        </BrowserRouter>
+      </MyDispatchContext.Provider>
+    </MyUserContext.Provider>
+
   );
 }
 
