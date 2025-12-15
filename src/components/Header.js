@@ -4,13 +4,15 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useContext, useState } from 'react';
-import { MyDispatchContext, MyUserContext } from '../../Contexts';
+import { MyDispatchContext, MyUserContext } from '../Contexts';
 import { AppBar, Drawer } from '@mui/material';
 import { Avatar, Button, Stack } from '@mui/joy';
 import { Link, useNavigate } from 'react-router-dom';
-import User from '../User';
-import Organizer from '../Organizer';
-import Event from '../Event';
+import Merchandise from '../screen/Merchandise';
+import Event from '../screen/Event';
+import Organizer from '../screen/Organizer';
+import User from '../screen/User';
+import Voucher from '../screen/Voucher';
 
 
 const Header = () => {
@@ -21,7 +23,6 @@ const Header = () => {
   const nav = useNavigate();
 
   return (
-
     user == null ? <></> :
       <Box>
         <Box sx={{ flexGrow: 1 }}>
@@ -83,9 +84,6 @@ const Header = () => {
                 Người dùng
               </Link>
             }
-
-
-
             {user && user.role === 'admin' &&
               <Link
                 component={<Organizer />}
@@ -96,8 +94,7 @@ const Header = () => {
                 Ban tổ chức
               </Link>
             }
-
-            {user && user.role === 'organizer' &&
+            {user && (user.role === 'organizer' || user.role === 'admin') &&
               <Link
                 component={<Event />}
                 to='/events'
@@ -107,12 +104,28 @@ const Header = () => {
                 Sự kiện
               </Link>
             }
-
+               {user && (user.role === 'organizer' || user.role === 'admin') &&
+              <Link
+                component={<Merchandise />}
+                to='/merchandises'
+                color="primary"
+                underline="hover"
+                variant="plain">
+                Đồ lưu niệm
+              </Link>
+            }
+                   {user && (user.role === 'organizer' || user.role === 'admin') &&
+              <Link
+                component={<Voucher />}
+                to='/vouchers'
+                color="primary"
+                underline="hover"
+                variant="plain">
+                Mã giảm giá
+              </Link>
+            }
           </Stack>
-
         </Drawer>
-
-
       </Box>
   );
 }

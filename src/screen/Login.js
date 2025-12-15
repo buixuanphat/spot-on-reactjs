@@ -2,11 +2,12 @@ import { Box, Input, Stack, Button, Typography } from "@mui/joy";
 import logo from "../assets/spoton_logo.png";
 import { useContext, useState } from "react";
 import Apis, { authApis, endpoints } from "../configs/Apis";
-import ErrorDialog from "./layout/ErrorDialog";
+import ErrorDialog from "../components/ErrorDialog";
 import cookie from 'react-cookies'
 import { MyDispatchContext } from "../Contexts";
 import { useNavigate } from "react-router-dom";
 import { role } from "../configs/Enum";
+import { Form } from "antd";
 
 
 
@@ -36,6 +37,7 @@ const Login = () => {
                 payload: user.data.data
             })
 
+            user.data.data.role === role.organizer && nav('/events');
             user.data.data.role === role.admin && nav('/users');
         }
         catch (e) {
@@ -47,6 +49,11 @@ const Login = () => {
         }
     }
 
+    const handleKeydown = (e) => {
+        if (e.key === "Enter") console.log("enter");
+    }
+    window.addEventListener("keydown", handleKeydown);
+
     return (
         <Stack
             direction="row"
@@ -55,27 +62,31 @@ const Login = () => {
                 width: "100%",
             }}
         >
-            <Stack
-                spacing={2}
-                sx={{
-                    width: "50%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
-                <Typography level="h3">Đăng Nhập</Typography>
-                <Box sx={{ width: "50%" }} >
-                    <Input color="neutral" placeholder="Email" variant="soft" type="email" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })} />
-                </Box>
+            <Box sx={{
+                width: "50%",
+                justifyContent: "center",
+                alignItems: "center",
+                alignSelf: 'center'
+            }} >
+                <Form
+                    onFinish={login}
+                    name="basic"
+                    labelCol={{ span: 8 }}
+                    wrapperCol={{ span: 16 }}>
+                    <Typography level="h3">Đăng Nhập</Typography>
+                    <Box sx={{ width: "50%", mt: 2 }} >
+                        <Input color="neutral" placeholder="Email" variant="soft" type="email" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })} />
+                    </Box>
 
-                <Box sx={{ width: "50%" }} >
-                    <Input color="neutral" placeholder="Password" variant="soft" type="password" value={info.password} onChange={e => setInfo({ ...info, password: e.target.value })} />
-                </Box>
-                <Button loading={loading} sx={{ mt: 2, width: "50%" }} onClick={e => {
-                    e.preventDefault();
-                    login();
-                }} >Đăng Nhập</Button>
-            </Stack>
+                    <Box sx={{ width: "50%", mt: 2 }} >
+                        <Input color="neutral" placeholder="Password" variant="soft" type="password" value={info.password} onChange={e => setInfo({ ...info, password: e.target.value })} />
+                    </Box>
+                    <Button loading={loading} sx={{ mt: 2, width: "50%" }} type="submit" >Đăng Nhập</Button>
+
+                </Form>
+            </Box>
+
+
 
             <Box
                 sx={{

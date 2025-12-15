@@ -1,10 +1,10 @@
 import { Box, Input, Stack, Button, Typography, Select, Option, ListItemDecorator } from "@mui/joy";
 import React, { useEffect, useRef, useState } from "react";
-import ErrorDialog from "./layout/ErrorDialog";
+import ErrorDialog from "../components/ErrorDialog";
 import Apis, { banksApis, endpoints } from "../configs/Apis";
 import { Form, Button as AntButton, Avatar } from "antd";
 import { UploadOutlined } from '@ant-design/icons';
-import MySnackBar from "./layout/MySnackBar";
+import MySnackBar from "../components/MySnackBar";
 
 const RegisterOrganizer = () => {
 

@@ -5,9 +5,9 @@ import { Alert, CircularProgress, Option, Select, selectClasses, Stack, Table, I
 import { KeyboardArrowDown } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
-const Event = () => {
+const Merchandise = () => {
 
-    const [events, setEvents] = useState([])
+    const [merchandises, setMerchandises] = useState([])
 
     const [openDialog, setOpenDialog] = useState(false);
 
@@ -21,25 +21,22 @@ const Event = () => {
 
     const [kw, setKw] = useState('');
     const [filter, setFilter] = useState('id');
-    const [status, setStatus] = useState('pending');
-    const [active, setActive] = useState('true')
+
 
     const timeoutRef = useRef(null);
 
     const nav = useNavigate();
 
-    const fetchEvents = async () => {
+    const fetchMerchandises = async () => {
         try {
             setLoading(true);
-            let res = await authApis().get(endpoints['getEvents'], {
+            let res = await authApis().get(endpoints['getMerchandises'], {
                 params: {
-                    'status': status,
                     'page': page,
                     [filter]: kw,
-                    'active' : active
                 }
             });
-            setEvents(res.data.data.content);
+            setMerchandises(res.data.data.content);
             setPageNo(res.data.data.totalPages)
         }
         catch (e) {
@@ -53,8 +50,8 @@ const Event = () => {
 
 
     useEffect(() => {
-        fetchEvents();
-    }, [page, filter, kw, status, active]);
+        fetchMerchandises();
+    }, [page, filter, kw]);
 
 
 
@@ -62,13 +59,14 @@ const Event = () => {
 
     return (
         <Box>
-            <Button onClick={() => nav('/event/register')}>
-                Tạo sự kiện mới
+            <Button onClick={() => nav('/merchandises/create')}>
+                Tạo
             </Button>
             <Stack direction={'row'}>
                 <Input
                     placeholder="Tìm kiếm"
                     variant="soft"
+                    type={filter==='id' ? 'number' : 'text'}
                     onChange={(e) => {
                         if (timeoutRef.current) {
                             clearTimeout(timeoutRef.current)
@@ -93,57 +91,17 @@ const Event = () => {
                             },
                         },
                     }}
-                    onChange={(e, v) => setFilter(v)}
+                    onChange={(e, v) =>{setFilter(v)
+                        console.error(v)
+                    } }
                 >
                     <Option value='id'>ID</Option>
                     <Option value='name'>Tên</Option>
                 </Select>
-
-                <Select
-                    placeholder="Trạng thái"
-                    variant="soft"
-                    indicator={<KeyboardArrowDown />}
-                    defaultValue={'pending'}
-                    sx={{
-                        width: 240,
-                        [`& .${selectClasses.indicator}`]: {
-                            transition: '0.2s',
-                            [`&.${selectClasses.expanded}`]: {
-                                transform: 'rotate(-180deg)',
-                            },
-                        },
-                    }}
-                    onChange={(e, v) => setStatus(v)}
-                >
-                    <Option value='pending'>Chờ xử lý</Option>
-                    <Option value='verified'>Đã xác thực</Option>
-                    <Option value='rejected'>Đã từ chối</Option>
-                </Select>
-
-
-                <Select
-                    placeholder="Hoạt động"
-                    variant="soft"
-                    indicator={<KeyboardArrowDown />}
-                    defaultValue={'true'}
-                    sx={{
-                        width: 240,
-                        [`& .${selectClasses.indicator}`]: {
-                            transition: '0.2s',
-                            [`&.${selectClasses.expanded}`]: {
-                                transform: 'rotate(-180deg)',
-                            },
-                        },
-                    }}
-                    onChange={(e, v) => setActive(v)}
-                >
-                    <Option value='true'>Đã hoạt động</Option>
-                    <Option value='false'>Không hoạt động</Option>
-                </Select>
             </Stack>
 
             {loading && <CircularProgress style={{}} />}
-            {!loading && events.length > 0 ?
+            {!loading && merchandises.length > 0 ?
                 <Table
                     aria-label="basic table" borderAxis="both"
                     color="neutral"
@@ -156,14 +114,18 @@ const Event = () => {
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Tên Sự kiện</th>
+                            <th>Tên</th>
+                            <th>Hình ảnh</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {(events).map(e =>
-                            <tr key={e.id} style={{ cursor: 'pointer' }} onClick={()=>nav(`/events/${e.id}`)}>
-                                <td>{e.id}</td>
-                                <td>{e.name}</td>
+                        {(merchandises).map(m =>
+                            <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => nav(`/merchandises/${m.id}`)}>
+                                <td>{m.id}</td>
+                                <td>{m.name}</td>
+                                <td>
+                                    <img src={m.image} />
+                                </td>
                             </tr>
                         )}
                     </tbody>
@@ -172,10 +134,10 @@ const Event = () => {
                     color="danger"
                     size="md"
                     variant="soft"
-                >Không tìm thấy Sự kiện</Alert>
+                >Không tìm thấy đồ lưu niệm</Alert>
 
             }
-            {events.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
+            {merchandises.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
             <Dialog
                 open={openDialog}
                 onClose={() => { setOpenDialog(false) }}
@@ -197,4 +159,4 @@ const Event = () => {
         </Box>
     );
 }
-export default Event;
+export default Merchandise;

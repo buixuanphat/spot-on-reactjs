@@ -1,13 +1,13 @@
 import { Alert, Box, Button, CircularProgress, Snackbar, Stack, Switch, Typography } from "@mui/joy";
 import React, { useEffect, useRef, useState } from "react";
-import ErrorDialog from "./layout/ErrorDialog";
+import ErrorDialog from "../components/ErrorDialog";
 import { authApis, endpoints } from "../configs/Apis";
 import { useParams } from "react-router-dom";
 import { Avatar, DatePicker, Form, Input, Select, Upload, Button as AntButton } from "antd";
 import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import SaveIcon from '@mui/icons-material/Save';
 import { UploadOutlined } from '@ant-design/icons';
-import MySnackBar from "./layout/MySnackBar";
+import MySnackBar from "../components/MySnackBar";
 
 const OrganizerDetail = () => {
     const [organizer, setOrganizer] = useState(null);

@@ -15,7 +15,24 @@ export const endpoints = {
     'verifyOrganizer' : (id) => `/organizers/verify/${id}`,
     'eventRegister' : '/events/register',
     'getOrganizerByUser' : (userId) => `/users-organizers/${userId}`,
-    'getEvents' : '/events'
+    'getEvents' : '/events',
+    'getEvent' : (id) => `/events/${id}`,
+    'verifyEvent': (id) => `/events/verify/${id}`,
+    'getMerchandises' : '/merchandises',
+    'createMerchandise' : '/merchandises',
+    'getSections' : '/sections',
+    'createSection' : '/sections',
+    'deleteSection' : (id) => `/sections/${id}`,
+    'getVouchersByOrganizer' : "/vouchers",
+    'createVoucher' : "/vouchers",
+    'deleteVoucher' : (id) => `/vouchers/${id}`,
+    'getVouchersByEvent' : `/vouchers-events/event`,
+    'addVoucherEvent' : '/vouchers-events',
+    'deleteVoucherEvent' : (id) => `/vouchers-events/${id}`,
+    'getEventMerchandises' : '/event-merchandise' ,
+    'createEventMerchandise' : '/event-merchandise',
+    'deleteEventMerchandise' : (id) => `/event-merchandise/${id}`,
+
 }
 
 
@@ -33,6 +50,13 @@ export const banksApis = () => {
         baseURL: 'https://api.vietqr.io/v2/banks'
     })
 }
+
+export const provinceApis = () => {
+    return axios.create({
+        baseURL: 'https://provinces.open-api.vn/api/v1'
+    })
+}
+
 
 export default axios.create({
     baseURL: BASE_URL
