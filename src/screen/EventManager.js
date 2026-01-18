@@ -1,51 +1,53 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from "@mui/material";
 import { authApis, endpoints } from "../configs/Apis";
 import { useContext, useEffect, useState } from "react";
-import { Alert, AspectRatio, Button, CircularProgress, Stack, Table } from "@mui/joy";
+import { Alert, Button, CircularProgress, Stack, Table, ToggleButtonGroup } from "@mui/joy";
+import { Add } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { Input } from "antd";
-import { Add } from "@mui/icons-material";
+import { MyStatus } from "../configs/Enum";
 import { MyUserContext } from "../Contexts";
 
-const Merchandise = () => {
+const EventManger = () => {
 
-    const [merchandises, setMerchandises] = useState([])
-    const [id, setId] = useState()
-    const [name, setName] = useState()
+    const [events, setEvents] = useState([])
 
     const [openDialog, setOpenDialog] = useState(false);
-
     const [errorMessage, setErrorMessage] = useState('');
-
     const [loading, setLoading] = useState(false);
-
     const [pageNo, setPageNo] = useState(0);
-
     const [page, setPage] = useState(0);
 
-    const user = useContext(MyUserContext)
+    const [name, setName] = useState();
+    const [id, setId] = useState();
+    const [status, setStatus] = useState(MyStatus.pending);
 
+    const numberRegex = /^\d+$/;
 
     const nav = useNavigate();
 
-    const fetchMerchandises = async () => {
+    const fetchEvents = async () => {
         try {
             setLoading(true);
-            let res = await authApis().get(endpoints['getMerchandises'], {
+            let res = await authApis().get(endpoints['getEvents'], {
                 params:
                 {
-                    organizerId: user.organizer.id,
-                    page: page,
-                    id: id,
-                    name: name
+                    id,
+                    name,
+                    page,
+                    status
                 }
-            })
-            setMerchandises(res.data.data.content);
+            }
+            );
+            setEvents(res.data.data.content);
             setPageNo(res.data.data.totalPages)
         }
         catch (e) {
-            setErrorMessage(e.response?.data?.message || e.message)
-            setOpenDialog(true);
+            if (e.response?.data?.message) {
+                setErrorMessage(e.response?.data?.message)
+                setOpenDialog(true);
+            }
+            console.log(e)
         }
         finally {
             setLoading(false);
@@ -54,32 +56,24 @@ const Merchandise = () => {
 
 
     useEffect(() => {
-        fetchMerchandises();
-    }, [page]);
+        setPage(0)
+        let timer = setTimeout(() => {
+            fetchEvents();
+        }, 1000)
+        return () => clearTimeout(timer)
+    }, [name, id]);
 
 
     useEffect(() => {
-        let timer = setTimeout(() => {
-            setPage(0)
-            fetchMerchandises()
-        }, 1000)
-        return () => clearTimeout(timer)
-    }, [id, name])
-
-    const numberRegex = /^\d+$/;
+        fetchEvents();
+    }, [page, status]);
 
 
     return (
-        <Box
-            sx={{
-                my: '5%',
-                display: 'flex',
-                flexDirection: 'column'
-            }}
-        >
+        <div style={{ margin: '50px' }}>
             <Input
-                size="large"
                 placeholder="Tìm kiếm"
+                size="large"
                 onChange={(e) => {
                     if (numberRegex.test(e.target.value)) {
                         setId(e.target.value);
@@ -92,21 +86,31 @@ const Merchandise = () => {
                 }}
             />
 
+            <Stack direction='row' display='flex' justifyContent='space-between' mt={1} >
+                <ToggleButtonGroup
+                    variant="soft"
+                    value={status}
+                    exclusive
+                    onChange={(event, newValue) => {
+                        setStatus(newValue);
+                    }}
+                >
+                    <Button value={MyStatus.pending}>Chờ xác thực</Button>
+                    <Button value={MyStatus.verified}>Đã xác thực</Button>
+                    <Button value={MyStatus.running}>Đang hoạt động</Button>
+                    <Button value={MyStatus.rejected}>Đã từ chối</Button>
+                    <Button value={MyStatus.expired}>Đã kết thúc</Button>
+                </ToggleButtonGroup>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
-                    sx={{ marginTop: 1, width: 100 }}
                     startDecorator={<Add />}
                     variant="solid"
-                    onClick={() => nav('/merchandises/create')}>
+                    onClick={() => nav('/events/register')}>
                     Thêm
                 </Button>
-            </div>
-
-
-
+            </Stack>
             {loading && <CircularProgress style={{}} />}
-            {!loading && merchandises.length > 0 ?
+            {!loading && events.length > 0 ?
                 <Table
                     sx={{ mt: 1 }}
                     aria-label="basic table" borderAxis="both"
@@ -120,26 +124,16 @@ const Merchandise = () => {
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Tên</th>
-                            <th>Hình ảnh</th>
+                            <th>Tên Sự kiện</th>
+                            <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {(merchandises).map(m =>
-                            <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => nav(`/merchandises/${m.id}`)}>
-                                <td>{m.id}</td>
-                                <td>{m.name}</td>
-                                <td>
-                                    <AspectRatio ratio="1/1" sx={{ borderRadius: '12px', overflow: 'hidden' }}>
-                                        <img
-                                            src={m.image}
-                                            loading="lazy"
-                                            alt={m.name}
-                                            style={{ objectFit: 'cover' }}
-                                        />
-                                    </AspectRatio>
-
-                                </td>
+                        {(events).map(e =>
+                            <tr key={e.id} style={{ cursor: 'pointer' }} onClick={() => nav(`/events/${e.id}`)}>
+                                <td>{e.id}</td>
+                                <td>{e.name}</td>
+                                <td>{e.status}</td>
                             </tr>
                         )}
                     </tbody>
@@ -148,13 +142,12 @@ const Merchandise = () => {
                     color="danger"
                     size="md"
                     variant="soft"
-                >Không tìm thấy đồ lưu niệm</Alert>
+                >Không tìm thấy Sự kiện</Alert>
 
             }
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 50 }}>
-                {merchandises.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
-            </div>
-
+            <Box sx={{ mt: 1, width: '100%', display: 'flex', justifyContent: 'center' }} >
+                {events.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
+            </Box>
             <Dialog
                 open={openDialog}
                 onClose={() => { setOpenDialog(false) }}
@@ -173,7 +166,7 @@ const Merchandise = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </div>
     );
 }
-export default Merchandise;
+export default EventManger;

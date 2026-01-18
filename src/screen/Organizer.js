@@ -1,29 +1,26 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from "@mui/material";
 import { authApis, endpoints } from "../configs/Apis";
-import { useEffect, useRef, useState } from "react";
-import { Alert, CircularProgress, Option, Select, selectClasses, Stack, Table, Input } from "@mui/joy";
-import { KeyboardArrowDown } from "@mui/icons-material";
+import { useEffect, useState } from "react";
+import { Alert, CircularProgress, Option, Select, selectClasses, Stack, Table, ToggleButtonGroup, Button } from "@mui/joy";
+import { Add, KeyboardArrowDown } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { Input } from "antd";
+import { MyStatus } from "../configs/Enum";
 
 const Organizer = () => {
 
     const [organizers, setOrganizer] = useState([])
+    const [name, setName] = useState()
+    const [id, setId] = useState()
+    const [status, setStatus] = useState(MyStatus.pending)
 
     const [openDialog, setOpenDialog] = useState(false);
-
     const [errorMessage, setErrorMessage] = useState('');
-
     const [loading, setLoading] = useState(false);
-
     const [pageNo, setPageNo] = useState(0);
-
     const [page, setPage] = useState(0);
 
-    const [kw, setKw] = useState('');
-    const [filter, setFilter] = useState('id');
-    const [status, setStatus] = useState('pending');
-
-    const timeoutRef = useRef(null);
+    const numberRegex = /^\d+$/;
 
     const nav = useNavigate();
 
@@ -32,17 +29,22 @@ const Organizer = () => {
             setLoading(true);
             let res = await authApis().get(endpoints['getOrganizers'], {
                 params: {
-                    'status' : status,
+                    'status': status,
                     'page': page,
-                    [filter]: kw
+                    'name': name,
+                    'id': id
+
                 }
             });
             setOrganizer(res.data.data.content);
             setPageNo(res.data.data.totalPages)
         }
         catch (e) {
-            setErrorMessage(e.response?.data?.message || e.message)
-            setOpenDialog(true);
+            if (e.response?.data?.message) {
+                setErrorMessage(e.response?.data?.message)
+                setOpenDialog(true);
+            }
+            console.log(e)
         }
         finally {
             setLoading(false);
@@ -52,69 +54,60 @@ const Organizer = () => {
 
     useEffect(() => {
         fetchOrganizers();
-    }, [page, filter, kw, status]);
+    }, [page, status]);
 
+
+    useEffect(() => {
+        setPage(0)
+        let timer = setTimeout(() => {
+            fetchOrganizers();
+        }, 1000)
+        return () => clearTimeout(timer)
+    }, [name, id]);
 
 
 
 
     return (
-        <Box>
-            <Stack direction={'row'}>
-                <Input
-                    placeholder="Tìm kiếm"
-                    variant="soft"
-                    onChange={(e) => {
-                        if (timeoutRef.current) {
-                            clearTimeout(timeoutRef.current)
-                        }
-                        timeoutRef.current = setTimeout(() => {
-                            setKw(e.target.value);
-                            setPage(0);
-                        }, 1000);
-                    }}
-                />
-                <Select
-                    placeholder="Lọc"
-                    variant="soft"
-                    indicator={<KeyboardArrowDown />}
-                    defaultValue={'id'}
-                    sx={{
-                        width: 240,
-                        [`& .${selectClasses.indicator}`]: {
-                            transition: '0.2s',
-                            [`&.${selectClasses.expanded}`]: {
-                                transform: 'rotate(-180deg)',
-                            },
-                        },
-                    }}
-                    onChange={(e, v) => setFilter(v)}
-                >
-                    <Option value='id'>ID</Option>
-                    <Option value='name'>Tên</Option>
-                </Select>
+        <div style={{ margin: '50px' }}>
 
-                <Select
-                    placeholder="Trạng thái"
+            <Input
+                style={{ marginBottom: '10px' }}
+                size="large"
+                placeholder="Tìm kiếm"
+                onChange={(e) => {
+                    if (numberRegex.test(e.target.value)) {
+                        setId(e.target.value);
+                        setName('')
+                    }
+                    else {
+                        setName(e.target.value);
+                        setId(undefined)
+                    }
+                }}
+            />
+            <Stack direction='row' display='flex' justifyContent='space-between' marginBottom='10px'>
+                <ToggleButtonGroup
                     variant="soft"
-                    indicator={<KeyboardArrowDown />}
-                    defaultValue={'pending'}
-                    sx={{
-                        width: 240,
-                        [`& .${selectClasses.indicator}`]: {
-                            transition: '0.2s',
-                            [`&.${selectClasses.expanded}`]: {
-                                transform: 'rotate(-180deg)',
-                            },
-                        },
+                    value={status}
+                    exclusive
+                    onChange={(event, newValue) => {
+                        setStatus(newValue);
                     }}
-                    onChange={(e, v) => setStatus(v)}
                 >
-                    <Option value='pending'>Chờ xử lý</Option>
-                    <Option value='verified'>Đã xác thực</Option>
-                    <Option value='rejected'>Đã từ chối</Option>
-                </Select>
+                    <Button value={MyStatus.pending}>Chờ xác thực</Button>
+                    <Button value={MyStatus.verified}>Đã xác thực</Button>
+                    <Button value={MyStatus.rejected}>Đã từ chối</Button>
+                </ToggleButtonGroup>
+
+                <Button
+                    startDecorator={<Add />}
+                    variant="solid"
+                    onClick={() => nav('/events/register')}>
+                    Thêm
+                </Button>
             </Stack>
+
 
             {loading && <CircularProgress style={{}} />}
             {!loading && organizers.length > 0 ?
@@ -136,7 +129,7 @@ const Organizer = () => {
                     </thead>
                     <tbody>
                         {(organizers).map(o =>
-                            <tr key={o.id} style={{cursor:'pointer'}} onClick={()=>nav(`/organizers/${o.id}`)}>
+                            <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => nav(`/organizers/${o.id}`)}>
                                 <td>{o.id}</td>
                                 <td>{o.name}</td>
                                 <td>{o.email}</td>
@@ -151,7 +144,10 @@ const Organizer = () => {
                 >Không tìm thấy Công ty</Alert>
 
             }
-            {organizers.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
+            {organizers.length > 0 &&
+                <div style={{ margin: '10px', display: 'flex', justifyContent: 'center' }} >
+                    <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />
+                </div>}
             <Dialog
                 open={openDialog}
                 onClose={() => { setOpenDialog(false) }}
@@ -170,7 +166,7 @@ const Organizer = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </div>
     );
 }
 export default Organizer;

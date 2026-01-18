@@ -12,18 +12,20 @@ export const tier = {
 }
 
 
-export const color = {
+export const MyColor = {
     background: '#F7F7F7',
     primary: "#0D47A1",
     redError: "#B71C1C",
-    success: "#66BB6A"
+    success: "#66BB6A",
+    pinkLight: "#fef2f2"
 
 }
 
 export const MyStatus =
 {
-    pendding: 'pendding',
+    pending: 'pending',
     verified: 'verified',
     rejected: 'rejected',
-    running: 'running'
+    running: 'running',
+    expired: 'expired'
 }

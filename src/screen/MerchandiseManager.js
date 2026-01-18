@@ -1,17 +1,13 @@
-import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from "@mui/material";
 import { authApis, endpoints } from "../configs/Apis";
-import { useContext, useEffect, useState } from "react";
-import { Alert, AspectRatio, Button, CircularProgress, Stack, Table } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
+import { Alert, CircularProgress, Option, Select, selectClasses, Stack, Table, Input } from "@mui/joy";
+import { KeyboardArrowDown } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { Input } from "antd";
-import { Add } from "@mui/icons-material";
-import { MyUserContext } from "../Contexts";
 
-const Merchandise = () => {
+const MerchandiseManager = () => {
 
     const [merchandises, setMerchandises] = useState([])
-    const [id, setId] = useState()
-    const [name, setName] = useState()
 
     const [openDialog, setOpenDialog] = useState(false);
 
@@ -23,8 +19,11 @@ const Merchandise = () => {
 
     const [page, setPage] = useState(0);
 
-    const user = useContext(MyUserContext)
+    const [kw, setKw] = useState('');
+    const [filter, setFilter] = useState('id');
 
+
+    const timeoutRef = useRef(null);
 
     const nav = useNavigate();
 
@@ -32,14 +31,11 @@ const Merchandise = () => {
         try {
             setLoading(true);
             let res = await authApis().get(endpoints['getMerchandises'], {
-                params:
-                {
-                    organizerId: user.organizer.id,
-                    page: page,
-                    id: id,
-                    name: name
+                params: {
+                    'page': page,
+                    [filter]: kw,
                 }
-            })
+            });
             setMerchandises(res.data.data.content);
             setPageNo(res.data.data.totalPages)
         }
@@ -55,60 +51,59 @@ const Merchandise = () => {
 
     useEffect(() => {
         fetchMerchandises();
-    }, [page]);
+    }, [page, filter, kw]);
 
 
-    useEffect(() => {
-        let timer = setTimeout(() => {
-            setPage(0)
-            fetchMerchandises()
-        }, 1000)
-        return () => clearTimeout(timer)
-    }, [id, name])
 
-    const numberRegex = /^\d+$/;
 
 
     return (
-        <Box
-            sx={{
-                my: '5%',
-                display: 'flex',
-                flexDirection: 'column'
-            }}
-        >
-            <Input
-                size="large"
-                placeholder="Tìm kiếm"
-                onChange={(e) => {
-                    if (numberRegex.test(e.target.value)) {
-                        setId(e.target.value);
-                        setName('')
-                    }
-                    else {
-                        setName(e.target.value);
-                        setId(undefined)
-                    }
-                }}
-            />
-
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                    sx={{ marginTop: 1, width: 100 }}
-                    startDecorator={<Add />}
-                    variant="solid"
-                    onClick={() => nav('/merchandises/create')}>
-                    Thêm
-                </Button>
-            </div>
-
-
+        <Box>
+            <Button onClick={() => nav('/merchandises/create')}>
+                Tạo
+            </Button>
+            <Stack direction={'row'}>
+                <Input
+                    placeholder="Tìm kiếm"
+                    variant="soft"
+                    type={filter === 'id' ? 'number' : 'text'}
+                    onChange={(e) => {
+                        if (timeoutRef.current) {
+                            clearTimeout(timeoutRef.current)
+                        }
+                        timeoutRef.current = setTimeout(() => {
+                            setKw(e.target.value);
+                            setPage(0);
+                        }, 1000);
+                    }}
+                />
+                <Select
+                    placeholder="Lọc"
+                    variant="soft"
+                    indicator={<KeyboardArrowDown />}
+                    defaultValue={'id'}
+                    sx={{
+                        width: 240,
+                        [`& .${selectClasses.indicator}`]: {
+                            transition: '0.2s',
+                            [`&.${selectClasses.expanded}`]: {
+                                transform: 'rotate(-180deg)',
+                            },
+                        },
+                    }}
+                    onChange={(e, v) => {
+                        setFilter(v)
+                        console.error(v)
+                    }}
+                >
+                    <Option value='id'>ID</Option>
+                    <Option value='name'>Tên</Option>
+                </Select>
+            </Stack>
 
             {loading && <CircularProgress style={{}} />}
             {!loading && merchandises.length > 0 ?
                 <Table
-                    sx={{ mt: 1 }}
                     aria-label="basic table" borderAxis="both"
                     color="neutral"
                     size="lg"
@@ -130,15 +125,7 @@ const Merchandise = () => {
                                 <td>{m.id}</td>
                                 <td>{m.name}</td>
                                 <td>
-                                    <AspectRatio ratio="1/1" sx={{ borderRadius: '12px', overflow: 'hidden' }}>
-                                        <img
-                                            src={m.image}
-                                            loading="lazy"
-                                            alt={m.name}
-                                            style={{ objectFit: 'cover' }}
-                                        />
-                                    </AspectRatio>
-
+                                    <img src={m.image} />
                                 </td>
                             </tr>
                         )}
@@ -151,10 +138,7 @@ const Merchandise = () => {
                 >Không tìm thấy đồ lưu niệm</Alert>
 
             }
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 50 }}>
-                {merchandises.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
-            </div>
-
+            {merchandises.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
             <Dialog
                 open={openDialog}
                 onClose={() => { setOpenDialog(false) }}
@@ -176,4 +160,4 @@ const Merchandise = () => {
         </Box>
     );
 }
-export default Merchandise;
+export default MerchandiseManager;

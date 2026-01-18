@@ -1,9 +1,11 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { authApis, endpoints } from "../configs/Apis";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Alert, CircularProgress, Stack, Table, Input } from "@mui/joy";
+import { Alert, CircularProgress, Stack, Table, Button } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 import { MyUserContext } from "../Contexts";
+import { Input } from "antd";
+import { Add } from "@mui/icons-material";
 
 const Voucher = () => {
 
@@ -47,11 +49,16 @@ const Voucher = () => {
     const timeoutRef = useRef();
 
     return (
-        <Box>
+        <Box
+            sx={{
+                my: '5%',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
             <Stack direction={'row'}>
                 <Input
+                    size="large"
                     placeholder="Tìm kiếm"
-                    variant="soft"
                     onChange={(e) => {
                         if (timeoutRef.current) {
                             clearTimeout(timeoutRef.current)
@@ -62,8 +69,17 @@ const Voucher = () => {
                     }}
                 />
 
-
             </Stack>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                    sx={{ marginTop: 1, width: 100 }}
+                    startDecorator={<Add />}
+                    variant="solid"
+                    onClick={() => nav('/vouchers/create')}>
+                    Thêm
+                </Button>
+            </div>
 
             {loading && <CircularProgress />}
             {!loading && vouchers.length > 0 ?
@@ -75,7 +91,9 @@ const Voucher = () => {
                     stickyHeader
                     stripe="even"
                     hoverRow="true"
-                    variant="outlined">
+                    variant="outlined"
+                    sx={{ mt: 1 }}
+                >
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -84,7 +102,7 @@ const Voucher = () => {
                     </thead>
                     <tbody>
                         {(vouchers).map(v =>
-                            <tr key={v.id} style={{ cursor: 'pointer' }} >
+                            <tr key={v.id} style={{ cursor: 'pointer' }} onClick={() => nav(`/vouchers/${v.id}`)} >
                                 <td>{v.id}</td>
                                 <td>{v.code}</td>
                             </tr>
@@ -98,7 +116,7 @@ const Voucher = () => {
                 >Không tìm thấy mã giảm giá</Alert>
 
             }
-    
+
 
 
             <Dialog

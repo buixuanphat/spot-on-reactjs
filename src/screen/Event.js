@@ -21,9 +21,9 @@ const Event = () => {
     const [pageNo, setPageNo] = useState(0);
     const [page, setPage] = useState(0);
 
-    const [name, setName] = useState('');
+    const [name, setName] = useState();
     const [id, setId] = useState();
-    const [status, setStatus] = useState(MyStatus.pendding);
+    const [status, setStatus] = useState(MyStatus.pending);
 
     const numberRegex = /^\d+$/;
 
@@ -43,14 +43,12 @@ const Event = () => {
                 }
             }
             );
-            console.log(res.data.data.content)
-            console.log(name)
             setEvents(res.data.data.content);
+            console.log(res.data.data.content)
             setPageNo(res.data.data.totalPages)
         }
         catch (e) {
-            setErrorMessage(e.response?.data?.message || e.message)
-            setOpenDialog(true);
+            console.error(e)
         }
         finally {
             setLoading(false);
@@ -64,7 +62,12 @@ const Event = () => {
             fetchEvents();
         }, 1000)
         return () => clearTimeout(timer)
-    }, [name, page, id, status]);
+    }, [name, id]);
+
+
+    useEffect(() => {
+        fetchEvents();
+    }, [page, status]);
 
 
     return (
@@ -91,18 +94,19 @@ const Event = () => {
 
             <Stack direction='row' display='flex' justifyContent='space-between' mt={1} >
                 <ToggleButtonGroup
+                    color="neutral"
                     variant="soft"
                     value={status}
                     exclusive
                     onChange={(event, newValue) => {
                         setStatus(newValue);
-                        console.log(newValue);
                     }}
                 >
-                    <Button value={MyStatus.pendding}>Chờ xác thực</Button>
+                    <Button value={MyStatus.pending}>Chờ xác thực</Button>
                     <Button value={MyStatus.verified}>Đã xác thực</Button>
                     <Button value={MyStatus.running}>Đang hoạt động</Button>
                     <Button value={MyStatus.rejected}>Đã từ chối</Button>
+                    <Button value={MyStatus.expired}>Đã kết thúc</Button>
                 </ToggleButtonGroup>
 
                 <Button

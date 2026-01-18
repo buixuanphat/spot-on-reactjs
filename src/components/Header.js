@@ -5,15 +5,17 @@ import Typography from '@mui/material/Typography';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useContext, useState } from 'react';
 import { MyDispatchContext, MyUserContext } from '../Contexts';
-import { AppBar, Drawer } from '@mui/material';
-import { Avatar, Button, Stack } from '@mui/joy';
-import { Link, useNavigate } from 'react-router-dom';
-import Merchandise from '../screen/Merchandise';
-import Event from '../screen/Event';
-import Organizer from '../screen/Organizer';
-import User from '../screen/User';
-import Voucher from '../screen/Voucher';
-
+import { AppBar, Chip, Drawer } from '@mui/material';
+import { Avatar, Stack } from '@mui/joy';
+import { useNavigate } from 'react-router-dom';
+import LogoutIcon from '@mui/icons-material/Logout';
+import DiscountIcon from '@mui/icons-material/Discount';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import CorporateFareIcon from '@mui/icons-material/CorporateFare';
+import EventIcon from '@mui/icons-material/Event';
+import GroupIcon from '@mui/icons-material/Group';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import PublicIcon from '@mui/icons-material/Public';
 
 const Header = () => {
 
@@ -59,72 +61,154 @@ const Header = () => {
                   {user && <Avatar size='sm' src={user.avatar} />}
                 </IconButton>
               </Box>
-      
+
             </Toolbar>
           </AppBar>
         </Box>
-        <Drawer open={openDrawer} onClose={() => { setOpenDrawer(false) }}>
-          <Button
-            color="danger"
-            onClick={() => {
-              dispatch({ 'type': 'log-out' });
-              nav('/log-in');
-            }}
-          >Đăng xuất</Button>
-          <Stack direction='column'>
+        <Drawer
+          open={openDrawer}
+          onClose={() => { setOpenDrawer(false) }}>
+          <div style={{ width: '250px' }}>
+            <Stack direction='column'>
 
-            {user && user.role === 'admin' &&
-              <Link
-                component={<User />}
-                to="/users"
-                color="primary"
-                underline="hover"
-                variant="plain"
-              >
-                Người dùng
-              </Link>
-            }
-            {user && user.role === 'admin' &&
-              <Link
-                component={<Organizer />}
-                to='/organizers'
-                color="primary"
-                underline="hover"
-                variant="plain">
-                Ban tổ chức
-              </Link>
-            }
-            {user && (user.role === 'organizer' || user.role === 'admin') &&
-              <Link
-                component={<Event />}
-                to='/events'
-                color="primary"
-                underline="hover"
-                variant="plain">
-                Sự kiện
-              </Link>
-            }
-               {user && (user.role === 'organizer' || user.role === 'admin') &&
-              <Link
-                component={<Merchandise />}
-                to='/merchandises'
-                color="primary"
-                underline="hover"
-                variant="plain">
-                Đồ lưu niệm
-              </Link>
-            }
-                   {user && (user.role === 'organizer' || user.role === 'admin') &&
-              <Link
-                component={<Voucher />}
-                to='/vouchers'
-                color="primary"
-                underline="hover"
-                variant="plain">
-                Mã giảm giá
-              </Link>
-            }
-          </Stack>
+              {/* ADMIN */}
+              {user && user.role === 'admin' &&
+                <Chip
+                  icon={<GroupIcon />}
+                  label="Người dùng"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('/users')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+              {user && user.role === 'admin' &&
+                <Chip
+                  icon={<CorporateFareIcon />}
+                  label="Ban tổ chức"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('/organizers')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+              {user && (user.role === 'admin') &&
+                <Chip
+                  icon={<EventIcon />}
+                  label="Sự kiện"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('/events-manager')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+              {user && (user.role === 'admin') &&
+                <Chip
+                  icon={<BarChartIcon />}
+                  label="Thống kê"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('/stats')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+
+
+
+
+              {/* ORGANIZER */}
+              {user && (user.role === 'organizer') &&
+                <Typography variant='h5' sx={{ mx: '30px', mt: '30px' }} >
+                  Ban tổ chức
+                </Typography>}
+
+              {user && (user.role === 'organizer') &&
+                <Chip
+                  icon={<EventIcon />}
+                  label="Sự kiện"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('events')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+
+              }
+              {user && (user.role === 'organizer') &&
+                <Chip
+                  icon={<StorefrontIcon />}
+                  label="Đồ lưu niệm"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('merchandises')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />}
+
+
+              {user && (user.role === 'organizer') &&
+                <Chip
+                  icon={<DiscountIcon />}
+                  label="Mã giảm giá"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('vouchers')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+
+
+              {/* STAFF */}
+              {user && user.role === 'staff' &&
+                <Chip
+                  icon={<CorporateFareIcon />}
+                  label="Ban tổ chức"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('/organizers')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+              {user && (user.role === 'staff') &&
+                <Chip
+                  icon={<EventIcon />}
+                  label="Sự kiện"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('/events-manager')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+              {user && (user.role === 'staff') &&
+                <Chip
+                  icon={<PublicIcon />}
+                  label="Bài viết"
+                  variant="outlined"
+                  onClick={() => {
+                    nav('/posts')
+                  }}
+                  sx={{ my: '10px', mx: '30px' }} />
+              }
+
+
+
+              <Chip
+                color='error'
+                icon={<LogoutIcon />}
+                label="Đăng xuất"
+                variant="outlined"
+                onClick={() => {
+                  dispatch({ 'type': 'log-out' });
+                  nav('/log-in');
+                }}
+                sx={{ my: '10px', mx: '30px' }} />
+            </Stack>
+          </div>
         </Drawer>
       </Box>
   );

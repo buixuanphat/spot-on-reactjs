@@ -39,6 +39,7 @@ const Login = () => {
 
             user.data.data.role === role.organizer && nav('/events');
             user.data.data.role === role.admin && nav('/users');
+            user.data.data.role === role.staff && nav('/events-manager');
         }
         catch (e) {
             setErrorMessage(e.response?.data?.message || e.message)

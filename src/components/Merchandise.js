@@ -1,11 +1,13 @@
-import { Alert, AspectRatio, Box, Button, Card, CardContent, CircularProgress, DialogTitle, IconButton, Typography } from "@mui/joy";
-import { Dialog, DialogActions, DialogContent, DialogContentText, Pagination } from "@mui/material";
+import { Alert, AspectRatio, Box, Card, CardContent, DialogTitle, Typography } from "@mui/joy";
+import { Dialog, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 import { useEffect, useState } from "react";
 import { authApis, endpoints } from "../configs/Apis";
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { MyUserContext } from "../Contexts";
 import { useContext } from "react";
-import AddBoxIcon from '@mui/icons-material/AddBox';
+import { Add } from "@mui/icons-material";
+import { Button, Divider } from "antd";
+import { CheckCircleFilled, DeleteFilled, DeleteOutlined } from "@ant-design/icons";
+import AddButton from "./AddButton";
 
 const Merchandise = ({ eventId }) => {
 
@@ -13,9 +15,6 @@ const Merchandise = ({ eventId }) => {
     const [loading, setLoading] = useState(false);
     const [loadingAll, setLoadingAll] = useState(false);
     const [page, setPage] = useState(0);
-    const [pageAll, setPageAll] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalPagesAll, setTotalPagesAll] = useState(0);
     const [openDialog, setOpenDialog] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const user = useContext(MyUserContext);
@@ -28,12 +27,10 @@ const Merchandise = ({ eventId }) => {
             setLoadingAll(true);
             let res = await authApis().get(endpoints['getMerchandises'], {
                 params: {
-                    'page': page,
                     'organizerId': user.organizer.id
                 }
             });
             setAllMerchandises(res.data.data.content);
-            setTotalPagesAll(res.data.data.totalPages)
         }
         catch (e) {
             setErrorMessage(e.response?.data?.message || e.message)
@@ -63,113 +60,234 @@ const Merchandise = ({ eventId }) => {
         }
     }
 
-    useEffect(()=>
-    {
+    useEffect(() => {
         fetchEventMerchandise();
-    },[]);
+    }, []);
 
-    const createEventMerchandise = async(merchandiseId) =>
-    {
-        try
-        {
-            let res = await authApis().post(endpoints.createEventMerchandise, 
+
+
+    const createEventMerchandise = async (merchandiseId) => {
+        try {
+            let res = await authApis().post(endpoints.createEventMerchandise,
                 {
-                    "eventId" : eventId,
-                    "merchandiseId" : merchandiseId
+                    "eventId": eventId,
+                    "merchandiseId": merchandiseId
                 }
             );
 
-            if(res.status===200) fetchEventMerchandise();
+            if (res.status === 200) fetchEventMerchandise();
 
         }
-        catch(e)
-        {
+        catch (e) {
             setErrorMessage(e.response?.data?.message || e.message)
             setOpenDialog(true);
         }
     }
 
-    const deleteEventMerchandise = async(id) =>
-    {
-        try
-        {
+
+
+    const deleteEventMerchandise = async (id) => {
+        try {
             let res = await authApis().delete(endpoints['deleteEventMerchandise'](id));
-            if(res.status===200) fetchEventMerchandise();
+            if (res.status === 200) fetchEventMerchandise();
         }
-        catch(e)
-        {
+        catch (e) {
             setErrorMessage(e.response?.data?.message || e.message)
             setOpenDialog(true);
         }
     }
+
+
+    const [fileredMerchandise, setFilteredMerchandise] = useState([]);
+
+    useEffect(() => {
+        const value = allMerchandises.filter(am =>
+            !merchandises.some(m => m.merchandise.id === am.id)
+        );
+        setFilteredMerchandise(value);
+    }, [fileredMerchandise, allMerchandises]);
 
 
     return (
         <Box>
 
-             { merchandises.length > 0  && merchandises.map(m => <Card color="success" variant="soft" key={m.id} sx={{ width: 320 }}>
-                        <div>
-                            <Typography level="title-lg">{m.merchandise.name}</Typography>
-                            <IconButton
-                                aria-label="bookmark Bahamas Islands"
-                                variant="plain"
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                    mt: 5,
+                    gap: 5,
+                    marginBottom: '30px'
+                }}>
+                {merchandises.length > 0 && merchandises.map(m =>
+                    <Card
+                        variant="outlined"
+                        key={m.id}
+                        sx={{
+                            width: 320,
+                            overflow: 'hidden',
+                            borderRadius: '16px',
+                            border: '1px solid #eee'
+                        }}
+                    >
+                        <div style={{ padding: '12px 12px 0 12px', position: 'relative' }}>
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    textTransform: 'uppercase',
+                                    fontWeight: 'bold',
+                                    color: 'success.600',
+                                    mb: 0.5
+                                }}
+                            >
+                                Official Merchandise
+                            </Typography>
+
+                            <Typography level="title-lg" sx={{ pr: 4, mb: 1 }}>
+                                {m.merchandise.name}
+                            </Typography>
+
+                            <Button
+                                variant="solid"
                                 color="danger"
                                 size="sm"
-                                sx={{ position: 'absolute', top: '0.875rem', right: '0.5rem' }}
-                                onClick={()=>deleteEventMerchandise(m.id)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '12px',
+                                    right: '12px',
+                                }}
+                                onClick={() => deleteEventMerchandise(m.id)}
+                                icon={<DeleteFilled />}
                             >
-                                <DeleteForeverIcon />
-                            </IconButton>
+                                Xóa
+                            </Button>
                         </div>
-                        <AspectRatio minHeight="120px" maxHeight="200px">
-                            <img
-                                src={m.merchandise.image}
-                                loading="lazy"
-                                alt=""
-                            />
-                        </AspectRatio>
-                        <CardContent orientation="horizontal">
-                            <div>
-                                <Typography sx={{ fontSize: 'lg', fontWeight: 'lg' }}>{m.merchandise.price}</Typography>
-                            </div>
-                        </CardContent>
-                    </Card>)}
 
-            <Button onClick={() => {
-                fetchAllMerchandises();
-                setAdding(true);
-            }
-            } >Thêm</Button>
-            {adding &&
-                <Box>
-                    { allMerchandises.length > 0  && allMerchandises.map(m => <Card color="primary" variant="soft" key={m.id} sx={{ width: 320 }}>
-                        <div>
-                            <Typography level="title-lg">{m.name}</Typography>
-                            <IconButton
-                                aria-label="bookmark Bahamas Islands"
-                                variant="plain"
-                                color="primary"
-                                size="sm"
-                                sx={{ position: 'absolute', top: '0.875rem', right: '0.5rem' }}
-                                onClick={()=>createEventMerchandise(m.id)}
-                            >
-                                <AddBoxIcon />
-                            </IconButton>
+                        <div style={{ position: 'relative', margin: '0 12px' }}>
+                            <AspectRatio ratio="1/1" sx={{ borderRadius: '12px', overflow: 'hidden' }}>
+                                <img
+                                    src={m.merchandise.image}
+                                    loading="lazy"
+                                    alt={m.merchandise.name}
+                                    style={{ objectFit: 'cover' }}
+                                />
+                            </AspectRatio>
                         </div>
-                        <AspectRatio minHeight="120px" maxHeight="200px">
-                            <img
-                                src={m.image}
-                                loading="lazy"
-                                alt=""
-                            />
-                        </AspectRatio>
-                        <CardContent orientation="horizontal">
-                            <div>
-                                <Typography sx={{ fontSize: 'lg', fontWeight: 'lg' }}>{m.price}</Typography>
+
+                        <CardContent sx={{ p: 2 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <Typography sx={{ fontSize: 'sm', opacity: 0.6 }}>Giá bán:</Typography>
+                                    <Typography sx={{ fontSize: 'xl', fontWeight: '800', color: '#1A1A1A' }}>
+                                        {m.merchandise.price.toLocaleString("vi-VN")} <span style={{ fontSize: 14 }}>đ</span>
+                                    </Typography>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>)}
+            </Box>
+
+            {!adding &&
+                <AddButton onClick={() => {
+                    fetchAllMerchandises();
+                    setAdding(true);
+                }} />
+            }
+
+            {adding && <Divider sx={{ mt: 10 }}> Danh sách đồ lưu niệm:  </Divider>}
+
+
+            {adding && <Button icon={<CheckCircleFilled />} variant="solid" color="green" onClick={() => { setAdding(false) }} >Xong</Button>}
+
+
+
+            {adding &&
+                <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                    mt: 5,
+                    gap: 5
+                }}>
+                    {allMerchandises.length > 0 && fileredMerchandise.map(m =>
+
+                        <Card
+                            variant="outlined"
+                            key={m.id}
+                            sx={{
+                                width: 320,
+                                overflow: 'hidden',
+                                borderRadius: '16px',
+                                border: '1px solid #eee',
+                            }}>
+                            <div style={{ padding: '12px 12px 0 12px', position: 'relative' }}>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        textTransform: 'uppercase',
+                                        fontWeight: 'bold',
+                                        color: 'success.600',
+                                        mb: 0.5
+                                    }}
+                                >
+                                    Official Merchandise
+                                </Typography>
+
+                                <Typography level="title-lg" sx={{ pr: 4, mb: 1 }}>
+                                    {m.name}
+                                </Typography>
+
+                                <Button
+                                    variant="solid"
+                                    color="primary"
+                                    size="sm"
+                                    sx={{
+                                        position: 'absolute',
+                                        top: '12px',
+                                        right: '12px',
+                                    }}
+                                    icon={<Add />}
+                                    onClick={() => createEventMerchandise(m.id)}
+                                >
+                                    Thêm
+                                </Button>
+                            </div>
+
+
+                            <div style={{ position: 'relative', margin: '0 12px' }}>
+                                <AspectRatio ratio="1/1" sx={{ borderRadius: '12px', overflow: 'hidden' }}>
+                                    <img
+                                        src={m.image}
+                                        loading="lazy"
+                                        alt={m.name}
+                                        style={{ objectFit: 'cover' }}
+                                    />
+                                </AspectRatio>
+                            </div>
+
+                            <CardContent sx={{ p: 2 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <Typography sx={{ fontSize: 'sm', opacity: 0.6 }}>Giá bán:</Typography>
+                                        <Typography sx={{ fontSize: 'xl', fontWeight: '700', color: 'black' }}>
+                                            {m.price.toLocaleString("vi-VN")} <span style={{ fontSize: 14 }}>đ</span>
+                                        </Typography>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </Box>}
+            {adding && fileredMerchandise.length == 0
+                &&
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Alert
+                        color="danger"
+                        size="md"
+                        variant="soft"
+                        sx={{ width: '50%', margin: '20px' }}
+                    >Không tìm thấy đồ lưu niệm</Alert>
+                </div>
+            }
             {allMerchandises.length == 0 && adding &&
                 <Alert
                     color="danger"
@@ -179,7 +297,6 @@ const Merchandise = ({ eventId }) => {
             }
 
 
-            {allMerchandises.length > 0 && <Pagination count={totalPagesAll} onChange={(e, value) => setPageAll(value - 1)} />}
             <Dialog
                 open={openDialog}
                 onClose={() => { setOpenDialog(false) }}

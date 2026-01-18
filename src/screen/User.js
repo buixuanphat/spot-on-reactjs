@@ -1,28 +1,24 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from "@mui/material";
 import { authApis, endpoints } from "../configs/Apis";
-import { useEffect, useRef, useState } from "react";
-import { Alert, CircularProgress, Option, Select, selectClasses, Stack, Table, Input } from "@mui/joy";
-import { KeyboardArrowDown } from "@mui/icons-material";
+import { useEffect, useState } from "react";
+import { Alert, Button, CircularProgress, Table } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
+import { Input } from "antd";
+import { Add } from "@mui/icons-material";
 
 const User = () => {
 
     const [users, setUsers] = useState([])
+    const [email, setEmail] = useState()
+    const [id, setId] = useState()
 
     const [openDialog, setOpenDialog] = useState(false);
-
     const [errorMessage, setErrorMessage] = useState(null);
-
     const [loading, setLoading] = useState(false);
-
     const [pageNo, setPageNo] = useState(0);
-
     const [page, setPage] = useState(0);
 
-    const [kw, setKw] = useState('');
-    const [filter, setFilter] = useState('id');
-
-    const timeoutRef = useRef(null);
+    const numberRegex = /^\d+$/;
 
     const nav = useNavigate();
 
@@ -32,7 +28,8 @@ const User = () => {
             let res = await authApis().get(endpoints['getUsers'], {
                 params: {
                     'page': page,
-                    [filter]: kw
+                    'email': email,
+                    'id': id
                 }
             });
             setUsers(res.data.data.content);
@@ -50,48 +47,47 @@ const User = () => {
 
     useEffect(() => {
         fetchUsers();
-    }, [page, filter, kw]);
+    }, [page]);
 
-
-
+    useEffect(() => {
+        setPage(0)
+        let timer = setTimeout(() => {
+            fetchUsers();
+        }, 1000)
+        return () => clearTimeout(timer)
+    }, [email, id]);
 
 
     return (
-        <Box>
-            <Stack direction={'row'}>
-                <Input
-                    placeholder="Tìm kiếm"
-                    variant="soft"
-                    onChange={(e) => {
-                        if (timeoutRef.current) {
-                            clearTimeout(timeoutRef.current)
-                        }
-                        timeoutRef.current = setTimeout(() => {
-                            setKw(e.target.value);
-                            setPage(0);
-                        }, 1000);
-                    }}
-                />
-                <Select
-                    placeholder="Lọc"
-                    variant="soft"
-                    indicator={<KeyboardArrowDown />}
-                    defaultValue={'id'}
-                    sx={{
-                        width: 240,
-                        [`& .${selectClasses.indicator}`]: {
-                            transition: '0.2s',
-                            [`&.${selectClasses.expanded}`]: {
-                                transform: 'rotate(-180deg)',
-                            },
-                        },
-                    }}
-                    onChange={(e, v) => setFilter(v)}
-                >
-                    <Option value='id'>ID</Option>
-                    <Option value='email'>Email</Option>
-                </Select>
-            </Stack>
+        <div style={{ margin: '50px' }}>
+            <Input
+                style={{ marginBottom: '10px' }}
+                placeholder="Tìm kiếm"
+                size="large"
+                onChange={(e) => {
+                    if (numberRegex.test(e.target.value)) {
+                        setId(e.target.value);
+                        setEmail('')
+                    }
+                    else {
+                        setEmail(e.target.value);
+                        setId(undefined)
+                    }
+                }}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }} >
+                <Button
+                    style={{ marginBottom: '10px' }}
+                    startDecorator={<Add />}
+                    variant="solid"
+                    onClick={() => nav('/users/create')}>
+                    Thêm
+                </Button>
+            </div>
+
+
+
 
             {loading && <CircularProgress style={{}} />}
             {!loading && users.length > 0 ?
@@ -113,7 +109,7 @@ const User = () => {
                     </thead>
                     <tbody>
                         {(users).map(u =>
-                            <tr key={u.id} style={{cursor:'pointer'}} onClick={()=>nav(`/users/${u.id}`)}>
+                            <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => nav(`/users/${u.id}`)}>
                                 <td>{u.id}</td>
                                 <td>{u.email}</td>
                                 <td>{u.role}</td>
@@ -128,7 +124,10 @@ const User = () => {
                 >Không tìm thấy người dùng</Alert>
 
             }
-            {users.length > 0 && <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />}
+            {users.length > 0 &&
+                <div style={{ margin: '10px', display: 'flex', justifyContent: 'center' }}>
+                    <Pagination count={pageNo} onChange={(e, value) => setPage(value - 1)} />
+                </div>}
             <Dialog
                 open={openDialog}
                 onClose={() => { setOpenDialog(false) }}
@@ -147,7 +146,7 @@ const User = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </div>
     );
 }
 export default User;
